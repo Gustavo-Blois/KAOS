@@ -47,18 +47,15 @@ pub fn build(b: *std.Build) void {
     disk_step.dependOn(&mcopy.step);
 
     // zig build run
+    const display = b.option([]const u8, "display", "QEMU display backend (gtk, cocoa, sdl...)") orelse "gtk";
+
     const qemu = b.addSystemCommand(&.{
         "qemu-system-x86_64",
-        "-drive",
-        "if=pflash,format=raw,readonly=on,file=OVMF/OVMF_CODE.4m.fd",
-        "-drive",
-        "if=pflash,format=raw,file=OVMF/OVMF_VARS.4m.fd",
-        "-drive",
-        "format=vvfat,dir=zig-out,rw=on",
-        "-net",
-        "none",
-        "-display",
-        "gtk",
+        "-drive", "if=pflash,format=raw,readonly=on,file=OVMF/OVMF_CODE.4m.fd",
+        "-drive", "if=pflash,format=raw,file=OVMF/OVMF_VARS.4m.fd",
+        "-drive", "format=vvfat,dir=zig-out,rw=on",
+        "-net", "none",
+        "-display", display,
     });
     qemu.step.dependOn(&install.step);
 
