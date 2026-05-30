@@ -1,10 +1,16 @@
 const uefi = @import("std").os.uefi;
 const std = @import("std");
 const L = std.unicode.utf8ToUtf16LeStringLiteral;
+const console = @import("console.zig");
 pub fn printLn(comptime fmt: []const u8) void {
     const con_out = uefi.system_table.con_out.?;
     _ = con_out.outputString(L(fmt) ++ L("\r\n")) catch {};
 }
+
+const Resolution = struct {
+    width: u32,
+    height: u32,
+};
 
 pub fn u32ToUtf16(num: u32) [16:0]u16 {
     var buf8: [16]u8 = undefined;
@@ -33,6 +39,17 @@ pub fn findBiggestMode(gop: *uefi.protocol.GraphicsOutput) ?u32 {
     return biggest_mode;
 }
 
+pub fn findResolution(resolution: Resolution, gop: *uefi.protocol.GraphicsOutput) ?u32 {
+    for (0..gop.mode.max_mode) |i| {
+        const idx: u32 = @intCast(i);
+        const mode_info = gop.queryMode(idx) catch continue;
+        if (mode_info.horizontal_resolution == resolution.width and mode_info.vertical_resolution == resolution.height) {
+            return idx;
+        }
+    }
+    return null;
+}
+
 pub fn main() void {
     const con_out = uefi.system_table.con_out.?;
     _ = con_out.reset(false) catch {};
@@ -45,7 +62,7 @@ pub fn main() void {
         return;
     }).?;
 
-    _ = gop.setMode(findBiggestMode(gop).?) catch {
+    _ = gop.setMode(findResolution(.{ .width = 1920, .height = 1080 }, gop).?) catch {
         printLn("Failed to set mode");
         return;
     };
@@ -59,6 +76,7 @@ pub fn main() void {
     printLn("");
     _ = con_out.outputString(&vertical) catch {};
     printLn("");
+    console.whiteScreen(gop);
 
     while (true) {}
 }

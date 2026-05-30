@@ -51,11 +51,16 @@ pub fn build(b: *std.Build) void {
 
     const qemu = b.addSystemCommand(&.{
         "qemu-system-x86_64",
-        "-drive", "if=pflash,format=raw,readonly=on,file=OVMF/OVMF_CODE.4m.fd",
-        "-drive", "if=pflash,format=raw,file=OVMF/OVMF_VARS.4m.fd",
-        "-drive", "format=vvfat,dir=zig-out,rw=on",
-        "-net", "none",
-        "-display", display,
+        "-drive",
+        "if=pflash,format=raw,readonly=on,file=OVMF/OVMF_CODE.4m.fd",
+        "-drive",
+        "if=pflash,format=raw,file=OVMF/OVMF_VARS.4m.fd",
+        "-drive",
+        "format=vvfat,dir=zig-out,rw=on",
+        "-net",
+        "none",
+        "-display",
+        display,
     });
     qemu.step.dependOn(&install.step);
 
